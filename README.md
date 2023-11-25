@@ -1,6 +1,8 @@
 # CS2 TypeScript Converter
 This program is designed to convert files from the `vts` format to `vts_c`. This file is a TypeScript script that can be read by the game CS2. You can create logic for your maps using this program.
 
+[Download](https://github.com/Ansimist/cs2typescript/releases)
+
 ## How to use the Program
 - Launch the program and insert the path to your addon in the `content` folder.
 - You need to create a file with the vts format in the `scripts` folder of your addon.
