@@ -46,7 +46,7 @@ namespace cs2typescript
                 catch (Exception e) { Console.WriteLine(e.Message); }
                 return;
             }
-            Deserialize(path);
+            //Deserialize(path);
         }
 
         public void Deserialize(string path)

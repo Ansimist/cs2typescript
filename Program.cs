@@ -42,9 +42,13 @@
             Console.WriteLine($"Path to content addon: {pathToContentAddon}");
             Console.WriteLine($"Path to game addon: {pathToAddon}");
             string pathToContentScriptsFolder = pathToContentAddon + "scripts\\";
+            string pathToContentVScriptsFolder = pathToContentAddon + "scripts\\vscripts";
             string pathToScriptsFolder = pathToAddon + "scripts\\";
+            string pathToVScriptsFolder = pathToAddon + "scripts\\vscripts";
             if (!Directory.Exists(pathToContentScriptsFolder)) Directory.CreateDirectory(pathToContentScriptsFolder);
+            if (!Directory.Exists(pathToContentVScriptsFolder)) Directory.CreateDirectory(pathToContentVScriptsFolder);
             if (!Directory.Exists(pathToScriptsFolder)) Directory.CreateDirectory(pathToScriptsFolder);
+            if (!Directory.Exists(pathToVScriptsFolder)) Directory.CreateDirectory(pathToVScriptsFolder);
 
             foreach (var file in GetFiles(pathToContentScriptsFolder))
             {
