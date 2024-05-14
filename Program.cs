@@ -67,7 +67,7 @@
 
         public static string[] GetFiles(string path)
         {
-            string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
+            string[] files = Directory.GetFiles(path, "*.vts", SearchOption.AllDirectories);
             return files;
         }
     }
