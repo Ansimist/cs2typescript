@@ -38,7 +38,15 @@
             if (pathToContentAddon == null) return;
             if (pathToContentAddon.Length == 0) pathToContentAddon = "F:\\SteamLibrary\\steamapps\\common\\Counter-Strike Global Offensive\\content\\csgo_addons\\squid_game\\";
             if (pathToContentAddon[pathToContentAddon.Length - 1] != '\\') pathToContentAddon += '\\';
-            string pathToAddon = pathToContentAddon.Replace("\\content\\", "\\game\\");
+            if(!Directory.Exists(pathToContentAddon))
+            {
+                Console.WriteLine($"Wrong path!");
+                Main(args);
+                return;
+            }
+
+            pathToContentAddon = pathToContentAddon.Replace("\\game\\csgo_addons", "\\content\\csgo_addons");
+            string pathToAddon = pathToContentAddon.Replace("\\content\\csgo_addons", "\\game\\csgo_addons");
             Console.WriteLine($"Path to content addon: {pathToContentAddon}");
             Console.WriteLine($"Path to game addon: {pathToAddon}");
             string pathToContentScriptsFolder = pathToContentAddon + "scripts\\";
@@ -50,6 +58,8 @@
             if (!Directory.Exists(pathToScriptsFolder)) Directory.CreateDirectory(pathToScriptsFolder);
             if (!Directory.Exists(pathToVScriptsFolder)) Directory.CreateDirectory(pathToVScriptsFolder);
 
+            Console.WriteLine($"Move the .vts files to the folder: {pathToContentVScriptsFolder}\n");
+            
             foreach (var file in GetFiles(pathToContentScriptsFolder))
             {
                 Console.WriteLine(file);
