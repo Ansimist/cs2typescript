@@ -1,7 +1,18 @@
-﻿namespace cs2typescript
+using System;
+using System.IO;
+using System.Text.Json;
+using System.Collections.Generic;
+using System.Threading;
+
+namespace cs2typescript
 {
     internal class Program
     {
+        public class Config
+        {
+            public string PathToContentAddon { get; set; }
+        }
+
         public static FileSystemWatcher FileWatcher(string filePath)
         {
             FileSystemWatcher watcher = new FileSystemWatcher(Path.GetDirectoryName(filePath));
@@ -11,7 +22,7 @@
             {
                 if (e.FullPath == filePath)
                 {
-                    Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss")} File {Path.GetFileName(filePath)} has been changed");
+                    Console.WriteLine($"{DateTime.Now:HH:mm:ss} File {Path.GetFileName(filePath)} has been changed");
                     string newPath = filePath.Replace("\\content\\", "\\game\\");
                     string pathDir = Path.GetDirectoryName(newPath);
                     if (!Directory.Exists(pathDir)) Directory.CreateDirectory(pathDir);
@@ -20,27 +31,44 @@
             };
 
             watcher.EnableRaisingEvents = true;
-            Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss")} Tracking file changes {Path.GetFileName(filePath)}.");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss} Tracking file changes {Path.GetFileName(filePath)}.");
             return watcher;
         }
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Enter path to content addon \n(example F:\\SteamLibrary\\steamapps\\common\\Counter-Strike Global Offensive\\content\\csgo_addons\\example_addon\\): ");
-            string pathToContentAddon;
-            if (args.Length > 0)
+            string configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+            string pathToContentAddon = null;
+
+            if (File.Exists(configFilePath))
             {
-                pathToContentAddon = args[0];
+                try
+                {
+                    string configContent = File.ReadAllText(configFilePath);
+                    Config config = JsonSerializer.Deserialize<Config>(configContent);
+                    if (config != null && !string.IsNullOrEmpty(config.PathToContentAddon))
+                    {
+                        pathToContentAddon = config.PathToContentAddon;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to read or parse config.json: {ex.Message}");
+                }
             }
-            else
+
+            if (string.IsNullOrEmpty(pathToContentAddon))
             {
-                pathToContentAddon = Console.ReadLine();
+                Console.WriteLine("Enter path to content addon \n(example F:\\SteamLibrary\\steamapps\\common\\Counter-Strike Global Offensive\\content\\csgo_addons\\example_addon\\): ");
+                pathToContentAddon = args.Length > 0 ? args[0] : Console.ReadLine();
             }
-            if (pathToContentAddon == null) return;
-            if (pathToContentAddon.Length == 0) pathToContentAddon = "F:\\SteamLibrary\\steamapps\\common\\Counter-Strike Global Offensive\\content\\csgo_addons\\squid_game\\";
+
+            if (string.IsNullOrEmpty(pathToContentAddon)) return;
             if (pathToContentAddon[pathToContentAddon.Length - 1] != '\\') pathToContentAddon += '\\';
-            if(!Directory.Exists(pathToContentAddon))
+
+            if (!Directory.Exists(pathToContentAddon))
             {
-                Console.WriteLine($"Wrong path!");
+                Console.WriteLine("Wrong path!");
                 Main(args);
                 return;
             }
@@ -53,18 +81,20 @@
             string pathToContentVScriptsFolder = pathToContentAddon + "scripts\\vscripts";
             string pathToScriptsFolder = pathToAddon + "scripts\\";
             string pathToVScriptsFolder = pathToAddon + "scripts\\vscripts";
+
             if (!Directory.Exists(pathToContentScriptsFolder)) Directory.CreateDirectory(pathToContentScriptsFolder);
             if (!Directory.Exists(pathToContentVScriptsFolder)) Directory.CreateDirectory(pathToContentVScriptsFolder);
             if (!Directory.Exists(pathToScriptsFolder)) Directory.CreateDirectory(pathToScriptsFolder);
             if (!Directory.Exists(pathToVScriptsFolder)) Directory.CreateDirectory(pathToVScriptsFolder);
 
             Console.WriteLine($"Move the .vts files to the folder: {pathToContentVScriptsFolder}\n");
-            
+
             foreach (var file in GetFiles(pathToContentScriptsFolder))
             {
                 Console.WriteLine(file);
                 new CS2TypeScript(file, file.Replace("\\content\\", "\\game\\"));
             }
+
             Dictionary<string, FileSystemWatcher> pathWatchers = new Dictionary<string, FileSystemWatcher>();
             while (true)
             {
