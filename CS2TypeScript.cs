@@ -23,7 +23,7 @@ namespace cs2typescript
         public CS2TypeScript(string path, string newPath = "")
         {
             string ext = Path.GetExtension(path).Trim();
-            if (ext == ".vts")
+            if (ext == ".ts" || ext == ".vts")
             {
                 try
                 {
@@ -36,11 +36,11 @@ namespace cs2typescript
 
                     if (newPath.Length == 0)
                     {
-                        Save(path + "_c", ext);
+                        Save(path + "_c");
                     }
                     else
                     {
-                        Save(newPath + "_c", ext);
+                        Save(newPath + "_c");
                     }
                 }
                 catch (Exception e) { Console.WriteLine(e.Message); }
