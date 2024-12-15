@@ -9,21 +9,21 @@ namespace cs2typescript
         public int Version { get; set; } = 8;
         public int unknown2 { get; set; } = 3;
 
-        public CS2KV3 RED2 { get; set; }
+        public CS2KV3? RED2 { get; set; }
         public int RED2_Offset { get; set; } = 0;
         public int RED2_Size { get; set; } = 0;
 
-        public string Data { get; set; }
+        public string? Data { get; set; }
         public int Data_Offset { get; set; } = 0;
         public int Data_Size { get; set; } = 0;
 
-        public CS2KV3 STAT { get; set; }
+        public CS2KV3? STAT { get; set; }
         public int STAT_Offset { get; set; } = 0;
         public int STAT_Size { get; set; } = 0;
         public CS2TypeScript(string path, string newPath = "")
         {
             string ext = Path.GetExtension(path).Trim();
-            if (ext == ".ts" || ext == ".vts")
+            if (ext == ".vts" || ext == ".ts" || ext == ".js")
             {
                 try
                 {
@@ -36,11 +36,11 @@ namespace cs2typescript
 
                     if (newPath.Length == 0)
                     {
-                        Save(path + "_c");
+                        Save(path);
                     }
                     else
                     {
-                        Save(newPath + "_c");
+                        Save(newPath);
                     }
                 }
                 catch (Exception e) { Console.WriteLine(e.Message); }
@@ -84,9 +84,11 @@ namespace cs2typescript
             int stat4 = binaryReader.ReadInt32();
         }
 
-        public void Save(string newPath, string ext = ".vts")
+        public void Save(string path)
         {
-            Data_Size = Data.Length;
+            string newPath = Path.ChangeExtension(path, ".vts_c");
+
+            Data_Size = Data!.Length;
             List<byte> newData = new List<byte>();
             byte[] STATBytes = CS2KV3.Serialize(Data);
             //13*4=52
