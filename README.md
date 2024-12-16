@@ -7,7 +7,7 @@ CS2 TypeScript Converter is a tool for converting files from the `.vts` format t
 - Real-time updates to game folder whenever changes are made.
 - Simplifies map scripting with TypeScript.
 
-[**Download**](https://github.com/Ansimist/cs2typescript/releases/download/1.0/cs2typescript.exe)
+[**Download**](https://github.com/Ansimist/cs2typescript/releases/download/1.1/cs2typescript.zip)
 
 ---
 
