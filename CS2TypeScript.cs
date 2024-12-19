@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace cs2typescript
 {
@@ -34,19 +35,24 @@ namespace cs2typescript
                         Data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     }
 
+                    if (ext == ".js")
+                    {
+                        var minified = MinifyJS(Data);
+                        Data = minified;
+                        Program.PrintCon($"Minified {Path.GetFileName(path)}", 1);
+                    }
+
                     if (newPath.Length == 0)
-                    {
                         Save(path);
-                    }
                     else
-                    {
                         Save(newPath);
-                    }
                 }
-                catch (Exception e) { Console.WriteLine(e.Message); }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
                 return;
             }
-            //Deserialize(path);
         }
 
         public void Deserialize(string path)
@@ -118,6 +124,20 @@ namespace cs2typescript
             newData.AddRange(Encoding.ASCII.GetBytes(Data)); //size
             newData.AddRange(STATBytes); //size
             File.WriteAllBytes(newPath, newData.ToArray());
+            Program.PrintCon($"Compiled {Path.GetFileName(newPath)}", 1);
+        }
+
+        public static string MinifyJS(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+
+            string withoutBlockComments = Regex.Replace(input, @"/\*(?:(?!bool|string|number).)*?\*/", string.Empty, RegexOptions.Singleline);
+            string withoutLineComments = Regex.Replace(withoutBlockComments, @"//.*", string.Empty);
+            string withoutExcessWhitespace = Regex.Replace(withoutLineComments, @"\s+", " ");
+            string minified = Regex.Replace(withoutExcessWhitespace, @"\s*([{};,:()=])\s*", "$1");
+
+            return minified.Trim();
         }
     }
 }

@@ -5,9 +5,12 @@ namespace cs2typescript
 {
     internal class Program
     {
+        public static bool MinifyJS { get; set; } = false;
+        
         public class Config
         {
             public string? PathToContentAddon { get; set; }
+            public string? MinifyJS { get; set; } = "false";
         }
 
         public static FileSystemWatcher FileWatcher(string filePath)
@@ -15,30 +18,23 @@ namespace cs2typescript
             FileSystemWatcher watcher = new FileSystemWatcher(Path.GetDirectoryName(filePath)!);
             watcher.Filter = Path.GetFileName(filePath);
             watcher.NotifyFilter = NotifyFilters.LastWrite;
-
-            DateTime lastChange = DateTime.MinValue;
             watcher.Changed += (sender, e) =>
             {
                 if (e.FullPath == filePath)
                 {
-                    if ((DateTime.Now - lastChange).TotalMilliseconds > 500)
-                    {
-                        PrintCon($"File {Path.GetFileName(filePath)} has been changed", 1);
-                        lastChange = DateTime.Now;
-
-                        string newPath = filePath.Replace("\\content\\", "\\game\\");
-                        string pathDir = Path.GetDirectoryName(newPath)!;
-                        if (!Directory.Exists(pathDir)) Directory.CreateDirectory(pathDir);
-
-                        CS2TypeScript fakeScript = new CS2TypeScript(filePath, newPath);
-                    }
+                    Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss")} File {Path.GetFileName(filePath)} has been changed");
+                    string newPath = filePath.Replace("\\content\\", "\\game\\");
+                    string pathDir = Path.GetDirectoryName(newPath)!;
+                    if (!Directory.Exists(pathDir)) Directory.CreateDirectory(pathDir);
+                    CS2TypeScript fakeScript = new CS2TypeScript(filePath, newPath);
                 }
             };
 
             watcher.EnableRaisingEvents = true;
-            PrintCon($"Tracking file changes {Path.GetFileName(filePath)}.");
+            Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss")} Tracking file changes {Path.GetFileName(filePath)}.");
             return watcher;
         }
+        
         static void Main(string[] args)
         {
             EnableAnsiSupport();
@@ -55,6 +51,11 @@ namespace cs2typescript
                     if (config != null && !string.IsNullOrEmpty(config.PathToContentAddon))
                     {
                         pathToContentAddon = config.PathToContentAddon;
+                    }
+
+                    if (config != null && !string.IsNullOrEmpty(config.MinifyJS))
+                    {
+                        MinifyJS = bool.Parse(config.MinifyJS);
                     }
                 }
                 catch (Exception ex)
