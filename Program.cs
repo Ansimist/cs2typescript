@@ -57,6 +57,12 @@ namespace cs2typescript
                     {
                         MinifyJS = bool.Parse(config.MinifyJS);
                     }
+
+                    if (!Directory.Exists(pathToContentAddon))
+                    {
+                        PrintCon("Wrong path! Check config.json!");
+                        pathToContentAddon = null;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -65,21 +71,24 @@ namespace cs2typescript
             }
 
             if (string.IsNullOrEmpty(pathToContentAddon))
-            {
-                PrintCon("Enter path to content addon \n(example F:\\SteamLibrary\\steamapps\\common\\Counter-Strike Global Offensive\\content\\csgo_addons\\example_addon\\): ");
-                pathToContentAddon = args.Length > 0 ? args[0] : Console.ReadLine()!;
+            { 
+                while (true)
+                {
+                    PrintCon("\nEnter path to content addon \n(example F:\\SteamLibrary\\steamapps\\common\\Counter-Strike Global Offensive\\content\\csgo_addons\\example_addon\\): ");
+                    pathToContentAddon = args.Length > 0 ? args[0] : Console.ReadLine()!;
+                    if (string.IsNullOrEmpty(pathToContentAddon) ||
+                        Directory.GetParent(pathToContentAddon) == null ||
+                        !string.Equals(Directory.GetParent(pathToContentAddon)?.Name, "csgo_addons", StringComparison.OrdinalIgnoreCase) ||
+                        !Directory.Exists(pathToContentAddon))
+                    {
+                        PrintCon("Wrong path!");
+                        continue;
+                    }
+                    break;
+                }
             }
 
-            if (string.IsNullOrEmpty(pathToContentAddon)) return;
             if (pathToContentAddon[pathToContentAddon.Length - 1] != '\\') pathToContentAddon += '\\';
-
-            if (!Directory.Exists(pathToContentAddon))
-            {
-                PrintCon("Wrong path! Check config.json!");
-                Thread.Sleep(1000);
-                Environment.Exit(1);
-            }
-
             pathToContentAddon = pathToContentAddon.Replace("\\game\\csgo_addons", "\\content\\csgo_addons");
             string pathToAddon = pathToContentAddon.Replace("\\content\\csgo_addons", "\\game\\csgo_addons");
             string pathToContentScriptsFolder = pathToContentAddon + "scripts\\";
