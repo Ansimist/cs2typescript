@@ -4,7 +4,7 @@ namespace cs2typescript
 {
     public class CS2KV3
     {
-        public byte[] Bytes { get; set; }
+        public byte[]? Bytes { get; set; }
         public byte firstByte { get; set; } = 4;
         public string firstText { get; set; } = "3VK";
         public long unknown01 { get; set; } = 5086823378859464316;

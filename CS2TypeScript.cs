@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace cs2typescript
 {
@@ -9,21 +10,21 @@ namespace cs2typescript
         public int Version { get; set; } = 8;
         public int unknown2 { get; set; } = 3;
 
-        public CS2KV3 RED2 { get; set; }
+        public CS2KV3? RED2 { get; set; }
         public int RED2_Offset { get; set; } = 0;
         public int RED2_Size { get; set; } = 0;
 
-        public string Data { get; set; }
+        public string? Data { get; set; }
         public int Data_Offset { get; set; } = 0;
         public int Data_Size { get; set; } = 0;
 
-        public CS2KV3 STAT { get; set; }
+        public CS2KV3? STAT { get; set; }
         public int STAT_Offset { get; set; } = 0;
         public int STAT_Size { get; set; } = 0;
         public CS2TypeScript(string path, string newPath = "")
         {
             string ext = Path.GetExtension(path).Trim();
-            if (ext == ".vts")
+            if (ext == ".vts" || ext == ".ts" || ext == ".js")
             {
                 try
                 {
@@ -34,19 +35,24 @@ namespace cs2typescript
                         Data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     }
 
+                    if (ext == ".js")
+                    {
+                        var minified = MinifyJS(Data);
+                        Data = minified;
+                        Program.PrintCon($"Minified {Path.GetFileName(path)}", 1);
+                    }
+
                     if (newPath.Length == 0)
-                    {
-                        Save(path + "_c", ext);
-                    }
+                        Save(path);
                     else
-                    {
-                        Save(newPath + "_c", ext);
-                    }
+                        Save(newPath);
                 }
-                catch (Exception e) { Console.WriteLine(e.Message); }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
                 return;
             }
-            //Deserialize(path);
         }
 
         public void Deserialize(string path)
@@ -84,9 +90,11 @@ namespace cs2typescript
             int stat4 = binaryReader.ReadInt32();
         }
 
-        public void Save(string newPath, string ext = ".vts")
+        public void Save(string path)
         {
-            Data_Size = Data.Length;
+            string newPath = Path.ChangeExtension(path, ".vts_c");
+
+            Data_Size = Data!.Length;
             List<byte> newData = new List<byte>();
             byte[] STATBytes = CS2KV3.Serialize(Data);
             //13*4=52
@@ -116,6 +124,20 @@ namespace cs2typescript
             newData.AddRange(Encoding.ASCII.GetBytes(Data)); //size
             newData.AddRange(STATBytes); //size
             File.WriteAllBytes(newPath, newData.ToArray());
+            Program.PrintCon($"Compiled {Path.GetFileName(newPath)}", 1);
+        }
+
+        public static string MinifyJS(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+
+            string withoutBlockComments = Regex.Replace(input, @"/\*(?:(?!bool|string|number).)*?\*/", string.Empty, RegexOptions.Singleline);
+            string withoutLineComments = Regex.Replace(withoutBlockComments, @"//.*", string.Empty);
+            string withoutExcessWhitespace = Regex.Replace(withoutLineComments, @"\s+", " ");
+            string minified = Regex.Replace(withoutExcessWhitespace, @"\s*([{};,:()=])\s*", "$1");
+
+            return minified.Trim();
         }
     }
 }
