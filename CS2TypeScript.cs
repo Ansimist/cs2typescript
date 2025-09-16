@@ -5,6 +5,7 @@ namespace cs2typescript
 {
     public class CS2TypeScript
     {
+        private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         public int FileSize { get; set; }
         public int unknown { get; set; } = 131084;
         public int Version { get; set; } = 8;
@@ -28,11 +29,10 @@ namespace cs2typescript
             {
                 try
                 {
-                    using (var streamFile = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var reader = new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
                     {
-                        byte[] buffer = new byte[streamFile.Length];
-                        int bytesRead = streamFile.Read(buffer, 0, buffer.Length);
-                        Data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        Data = reader.ReadToEnd();
                     }
 
                     if (ext == ".js")
@@ -42,7 +42,7 @@ namespace cs2typescript
                         Program.PrintCon($"Minified {Path.GetFileName(path)}", 1);
                     }
 
-                    if (newPath.Length == 0)
+                    if (string.IsNullOrEmpty(newPath))
                         Save(path);
                     else
                         Save(newPath);
@@ -94,19 +94,20 @@ namespace cs2typescript
         {
             string newPath = Path.ChangeExtension(path, ".vts_c");
 
-            Data_Size = Data!.Length;
-            List<byte> newData = new List<byte>();
-            byte[] STATBytes = CS2KV3.Serialize(Data);
+            byte[] dataBytes = Utf8NoBom.GetBytes(Data ?? string.Empty);
+            Data_Size = dataBytes.Length;
+            byte[] STATBytes = CS2KV3.Serialize(Data ?? string.Empty);
             //13*4=52
             FileSize = Data_Size + 52 + STATBytes.Length;
 
+            var newData = new List<byte>(FileSize);
             newData.AddRange(BitConverter.GetBytes(FileSize));
             newData.AddRange(BitConverter.GetBytes(unknown));
             newData.AddRange(BitConverter.GetBytes(Version));
             newData.AddRange(BitConverter.GetBytes(unknown2));
             newData.AddRange(Encoding.ASCII.GetBytes("RED2"));
-            newData.AddRange(BitConverter.GetBytes((int)0)); //offset
-            newData.AddRange(BitConverter.GetBytes((int)0)); //size
+            newData.AddRange(BitConverter.GetBytes(0)); //offset
+            newData.AddRange(BitConverter.GetBytes(0)); //size
             newData.AddRange(Encoding.ASCII.GetBytes("DATA"));
             newData.AddRange(BitConverter.GetBytes(20)); //offset
             newData.AddRange(BitConverter.GetBytes(Data_Size)); //size
@@ -118,10 +119,10 @@ namespace cs2typescript
             }
             else
             {
-                newData.AddRange(BitConverter.GetBytes((int)0)); //offset
-                newData.AddRange(BitConverter.GetBytes((int)0)); //size
+                newData.AddRange(BitConverter.GetBytes(0)); //offset
+                newData.AddRange(BitConverter.GetBytes(0)); //size
             }
-            newData.AddRange(Encoding.ASCII.GetBytes(Data)); //size
+            newData.AddRange(dataBytes);
             newData.AddRange(STATBytes); //size
             File.WriteAllBytes(newPath, newData.ToArray());
             Program.PrintCon($"Compiled {Path.GetFileName(newPath)}", 1);
